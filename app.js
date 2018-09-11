@@ -51,13 +51,13 @@ var client = new kafka.Client('127.0.0.1:2181', 'affable-producer-node-1',
         //noAckBatchSize: 2000000, // 2 MB
         noAckBatchAge: 4000 // 4 Sec
     });
-var producer = new HighLevelProducer(client, {requireAcks: 0});
+var producer = new HighLevelProducer(client, {requireAcks: 0, partitionerType: 3});
 
 producer.on('ready', function () {
     console.log("Producer started..");
 
-    for (var j=0; j<100; j++) {
-        for (var i=1000000; i<1001000;i++) {
+    for (var j=0; j<1000; j++) {
+        for (var i=1000000; i<1000010;i++) {
             request("http://localhost:3000/api/v1/influencers/" + i, function (error, response, body) {
                 console.log(body);
                 if (!error && response.statusCode === 200) {
@@ -65,9 +65,12 @@ producer.on('ready', function () {
                     var message = JSON.parse(body);
                     message.timestamp = moment().valueOf();
 
+                    console.log(message.pk);
+
                     // make the payload
                     var payload = [{
                         topic: "influencers",
+                        key: message.pk,
                         messages: JSON.stringify(message)
                     }];
 
